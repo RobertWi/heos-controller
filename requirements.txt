@@ -1,0 +1,4 @@
+aiohttp>=3.8.1
+zeroconf>=0.38.0
+jinja2>=3.0.0
+pillow>=10.0.0  # For image handling

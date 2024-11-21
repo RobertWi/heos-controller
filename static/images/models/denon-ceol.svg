@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <rect x="20" y="40" width="160" height="120" rx="10" fill="#1a1a1a" stroke="#333333" stroke-width="4"/>
+    <circle cx="100" cy="70" r="25" fill="#333333"/>
+    <text x="100" y="75" font-family="Arial" font-size="14" fill="#ffffff" text-anchor="middle">HEOS</text>
+    <rect x="35" y="110" width="130" height="30" rx="5" fill="#333333"/>
+    <text x="100" y="130" font-family="Arial" font-size="12" fill="#ffffff" text-anchor="middle">CEOL</text>
+</svg>
