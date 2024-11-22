@@ -27,7 +27,7 @@ check_server() {
     
     echo -e "${YELLOW}Waiting for server to start...${NC}"
     while [ $attempt -le $max_attempts ]; do
-        if curl -s http://localhost:8000/health > /dev/null; then
+        if curl -s http://localhost:8080/health > /dev/null; then
             echo -e "${GREEN}Server started successfully${NC}"
             return 0
         fi
@@ -50,8 +50,8 @@ cleanup() {
         kill $SERVER_PID 2>/dev/null || true
     fi
     
-    # Kill any process on port 8000
-    kill_port 8000
+    # Kill any process on port 8080
+    kill_port 8080
     
     # Deactivate virtual environment if active
     if [ -n "$VIRTUAL_ENV" ]; then
@@ -67,7 +67,7 @@ echo -e "${GREEN}Starting HEOS Controller Backend...${NC}"
 # Setup Python environment if needed
 if [ ! -d "venv" ]; then
     echo -e "${GREEN}Creating new virtual environment...${NC}"
-    python -m venv venv
+    python3 -m venv venv
     echo -e "${GREEN}Installing Python dependencies...${NC}"
     source venv/bin/activate
     pip install -U pip
@@ -77,14 +77,14 @@ else
     source venv/bin/activate
 fi
 
-# Kill any existing process on port 8000
-echo -e "${YELLOW}Ensuring port 8000 is free...${NC}"
-kill_port 8000
+# Kill any existing process on port 8080
+echo -e "${YELLOW}Ensuring port 8080 is free...${NC}"
+kill_port 8080
 sleep 2  # Give more time for port to be freed
 
 # Start aiohttp server
 echo -e "${GREEN}Starting HEOS Controller server...${NC}"
-python aiohttp_server.py &
+python3 aiohttp_server.py &
 SERVER_PID=$!
 
 # Wait for server to start

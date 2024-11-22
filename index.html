@@ -9,127 +9,197 @@
     <script src="static/js/renderer.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="min-h-screen bg-gray-100 dark:bg-dark-primary" x-data="heosController">
-    <div class="container mx-auto p-6 flex">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+    <div x-data="{
+        deviceList: [],
+        history: [],
+        selectedDevice: null,
+        command: '',
+        response: '',
+        isLoading: false,
+        lastDiscoveryTime: null,
+        showErrorPane: false,
+        errorLog: [],
+        
+        async init() {
+            await this.discoverDevices();
+            await this.loadHistory();
+            // Start auto-refresh
+            setInterval(() => this.discoverDevices(), 30000);
+        },
+        
+        async discoverDevices() {
+            this.isLoading = true;
+            try {
+                const response = await fetch('http://localhost:8080/api/discover');
+                const data = await response.json();
+                this.deviceList = data.devices || [];
+                this.lastDiscoveryTime = new Date().toLocaleTimeString();
+            } catch (error) {
+                this.logError('Error discovering devices: ' + error.message);
+            }
+            this.isLoading = false;
+        },
+        
+        async loadHistory() {
+            try {
+                const response = await fetch('http://localhost:8080/api/history');
+                const data = await response.json();
+                this.history = data.history || [];
+            } catch (error) {
+                this.logError('Error loading history: ' + error.message);
+            }
+        },
+        
+        async clearHistory() {
+            try {
+                await fetch('http://localhost:8080/api/history/clear', {
+                    method: 'POST'
+                });
+                this.history = [];
+            } catch (error) {
+                this.logError('Error clearing history: ' + error.message);
+            }
+        },
+        
+        async sendCommand(device, command) {
+            if (!device || !command) return;
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/player/' + device.ip + '/command', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        command: command
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.error) {
+                    this.logError('Command error: ' + data.error);
+                } else {
+                    // Refresh history after successful command
+                    await this.loadHistory();
+                }
+                
+                return data;
+                
+            } catch (error) {
+                this.logError('Error sending command: ' + error.message);
+                throw error;
+            }
+        },
+        
+        logError(error) {
+            this.errorLog.push({
+                timestamp: new Date().toISOString(),
+                message: error
+            });
+            // Keep only last 100 errors
+            if (this.errorLog.length > 100) {
+                this.errorLog.shift();
+            }
+        },
+        
+        toggleErrorPane() {
+            this.showErrorPane = !this.showErrorPane;
+        },
+        
+        formatTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+    }"
+    class="container mx-auto p-6 flex">
+        
         <!-- Main Content -->
         <div class="flex-grow pr-4">
-            <div class="flex justify-between items-center mb-4">
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">HEOS Devices</h1>
-                <div class="flex items-center gap-4">
-                    <span x-show="lastDiscoveryTime" class="text-sm text-gray-500 dark:text-gray-400">
-                        Last updated: <span x-text="new Date(lastDiscoveryTime).toLocaleTimeString()"></span>
-                    </span>
-                    <button @click="refreshDevices" 
-                            class="refresh-button"
-                            :class="{ 'animate-spin': isLoading }">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Error Message -->
-            <template x-if="errorMessage">
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded shadow-sm" role="alert">
-                    <div class="flex items-center">
-                        <div class="py-1">
-                            <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
-                        </div>
-                        <div>
-                            <p class="font-bold">Error</p>
-                            <p x-text="errorMessage"></p>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <div id="device-list" class="space-y-4">
-                <!-- Loading State -->
-                <template x-if="isLoading">
-                    <div class="text-center py-8">
-                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100"></div>
-                        <p class="mt-2 text-gray-600 dark:text-gray-400">Discovering HEOS devices...</p>
-                    </div>
-                </template>
-
-                <!-- No Devices Found -->
-                <template x-if="!isLoading && deviceList.length === 0">
-                    <div class="text-center py-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                        <i class="fas fa-search text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">No HEOS devices found on your network.</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                            Make sure your HEOS devices are:
-                            <br>1. Powered on
-                            <br>2. Connected to the same network
-                            <br>3. Not in standby mode
-                        </p>
-                        <button @click="refreshDevices" 
-                                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                            <i class="fas fa-sync-alt mr-2"></i>
-                            Try Again
+            <!-- Device List Section -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-2xl font-bold">HEOS Devices</h1>
+                    <div class="flex items-center gap-4">
+                        <span x-show="lastDiscoveryTime" class="text-sm text-gray-500">
+                            Last updated: <span x-text="lastDiscoveryTime"></span>
+                        </span>
+                        <button @click="discoverDevices()" 
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
                         </button>
                     </div>
-                </template>
-
-                <!-- Device List -->
-                <template x-for="device in deviceList" :key="device.ip">
-                    <div class="device-card p-4 rounded-lg flex items-center gap-4 shadow-sm"
-                         :class="{'bg-red-50 dark:bg-red-900/20': device.status === 'error',
-                                 'bg-white dark:bg-gray-800': device.status !== 'error'}">
-                        
-                        <!-- Device Icon and Status -->
-                        <div class="device-status-group">
-                            <i class="device-icon fas" :class="device.model.toLowerCase().includes('speaker') ? 'fa-volume-up' : 'fa-tv'"></i>
-                            <div class="status-indicator" 
-                                 :class="{'active': device.state === 'playing',
-                                         'error': device.status === 'error'}">
-                            </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Loading State -->
+                    <template x-if="isLoading">
+                        <div class="text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                         </div>
-                        
-                        <!-- Device Info -->
-                        <div class="device-info flex-grow">
-                            <h3 class="device-name" x-text="device.name"></h3>
-                            <div class="flex items-center gap-2">
-                                <span class="device-model" x-text="device.model"></span>
-                                <span class="text-sm text-gray-500" x-text="device.ip"></span>
-                            </div>
-                            <template x-if="device.error">
-                                <div class="mt-2 flex items-start gap-2">
-                                    <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
-                                    <p class="text-red-600 dark:text-red-400 text-sm" x-text="device.error"></p>
+                    </template>
+                    
+                    <!-- Device Cards -->
+                    <template x-for="device in deviceList" :key="device.ip">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 x-text="device.name" class="text-lg font-semibold"></h3>
+                                    <p class="text-sm text-gray-500" x-text="device.model + ' - ' + device.ip"></p>
                                 </div>
-                            </template>
-                        </div>
-                        
-                        <!-- Device Controls -->
-                        <div class="device-controls flex items-center gap-4">
-                            <template x-if="device.status === 'connected'">
-                                <div class="flex items-center gap-4">
-                                    <button class="play-pause-btn" @click="togglePlayback(device)"
-                                            :disabled="device.status !== 'connected'">
-                                        <i class="fas" :class="device.state === 'playing' ? 'fa-pause' : 'fa-play'"></i>
+                            </div>
+                            
+                            <!-- Command Interface -->
+                            <div class="mt-4">
+                                <div class="flex gap-2">
+                                    <input type="text" 
+                                           :id="'cmd-' + device.ip"
+                                           placeholder="Enter HEOS command"
+                                           class="flex-1 px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                                    <button @click="sendCommand(device, $el.previousElementSibling.value)"
+                                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                                        Send
                                     </button>
-                                    
-                                    <div class="volume-control flex items-center gap-2">
-                                        <input type="range" class="volume-slider" 
-                                               x-model="device.volume"
-                                               @input="updateVolume(device)"
-                                               :disabled="device.status !== 'connected'"
-                                               min="0" max="100">
-                                        <span class="volume-value" x-text="device.volume + '%'"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Command History Section -->
+            <div class="mt-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">Command History</h2>
+                    <button @click="clearHistory()"
+                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">
+                        Clear History
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <template x-for="entry in history" :key="entry.timestamp">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold" x-text="entry.device.name"></span>
+                                        <span class="text-sm text-gray-500" x-text="formatTimestamp(entry.timestamp)"></span>
+                                    </div>
+                                    <div class="mt-2 space-y-1">
+                                        <p class="text-sm">
+                                            <span class="font-medium">Command:</span>
+                                            <span x-text="entry.command" class="font-mono"></span>
+                                        </p>
+                                        <p class="text-sm">
+                                            <span class="font-medium">Response:</span>
+                                            <span x-text="entry.response" class="font-mono"></span>
+                                        </p>
                                     </div>
                                 </div>
-                            </template>
-                            
-                            <template x-if="device.status === 'error'">
-                                <button @click="retryConnection(device)" 
-                                        class="retry-btn px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                                    <i class="fas fa-redo-alt mr-1"></i>
-                                    Retry
-                                </button>
-                            </template>
+                            </div>
                         </div>
-                    </div>
-                </template>
+                    </template>
+                </div>
             </div>
         </div>
 
@@ -137,36 +207,16 @@
         <div x-show="showErrorPane" 
              class="w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 ml-4 flex flex-col h-[calc(100vh-3rem)]">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Error Log</h2>
-                <div class="flex gap-2">
-                    <button @click="clearErrorLogs" 
-                            class="px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
-                        Clear
-                    </button>
-                    <button @click="toggleErrorPane" 
-                            class="px-2 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors">
-                        Close
-                    </button>
-                </div>
+                <h2 class="text-lg font-bold">Error Log</h2>
+                <button @click="errorLog = []" class="text-sm text-red-500 hover:text-red-600">
+                    Clear
+                </button>
             </div>
-            
-            <div class="flex-grow overflow-y-auto">
-                <template x-if="errorLogs.length === 0">
-                    <div class="text-center py-8 text-gray-500">
-                        No errors to display
-                    </div>
-                </template>
-                
-                <template x-for="log in errorLogs.slice().reverse()" :key="log.timestamp">
-                    <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 rounded border-l-4 border-red-500">
-                        <div class="text-sm text-gray-500 dark:text-gray-400" x-text="formatTimestamp(log.timestamp)"></div>
-                        <div class="font-medium text-red-800 dark:text-red-400" x-text="log.message"></div>
-                        <template x-if="log.error">
-                            <div class="mt-1 text-sm text-red-700 dark:text-red-300" x-text="log.error"></div>
-                        </template>
-                        <template x-if="log.stack">
-                            <pre class="mt-2 text-xs text-red-600 dark:text-red-300 overflow-x-auto" x-text="log.stack"></pre>
-                        </template>
+            <div class="flex-1 overflow-y-auto space-y-2">
+                <template x-for="error in errorLog" :key="error.timestamp">
+                    <div class="p-2 text-sm border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20">
+                        <div class="text-xs text-gray-500" x-text="formatTimestamp(error.timestamp)"></div>
+                        <div x-text="error.message"></div>
                     </div>
                 </template>
             </div>
@@ -176,14 +226,7 @@
     <!-- Error Toggle Button -->
     <button @click="toggleErrorPane" 
             class="fixed bottom-4 right-4 p-3 bg-gray-800 dark:bg-gray-700 text-white rounded-full shadow-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
-        <i class="fas fa-bug"></i>
-        <template x-if="errorLogs.length > 0">
-            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" x-text="errorLogs.length"></span>
-        </template>
+        <i class="fas fa-exclamation-triangle"></i>
     </button>
-
-    <!-- Load our scripts -->
-    <script src="./static/js/theme.js"></script>
-    <script src="./static/js/deviceDetails.js"></script>
 </body>
 </html>

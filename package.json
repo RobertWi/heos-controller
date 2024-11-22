@@ -5,7 +5,10 @@
   "main": "main.js",
   "scripts": {
     "start": "electron . --no-sandbox",
+    "dev": "electron . --no-sandbox",
     "electron": "electron . --no-sandbox",
+    "build": "tailwindcss -i ./src/input.css -o ./dist/output.css",
+    "watch": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -14,5 +17,8 @@
     "alpinejs": "^3.13.5",
     "electron": "^29.1.0",
     "tailwindcss": "^3.4.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }
