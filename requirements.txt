@@ -1,6 +1,3 @@
-aiohttp>=3.8.0
-zeroconf>=0.131.0
-asyncio>=3.4.3
-netifaces>=0.11.0
-aiohttp-cors>=0.7.0
-pillow>=10.0.0  # For image handling
+zeroconf>=0.115.0
+telnetlib3>=2.0.0
+PyGObject>=3.42.0

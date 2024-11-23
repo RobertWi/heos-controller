@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=HEOS Controller
+Comment=Control HEOS devices from GNOME top bar with full controls
+Exec=/home/robert/Development/heos-controller/heos_indicator_control.py
+Icon=audio-headphones
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;Music;
+StartupNotify=true

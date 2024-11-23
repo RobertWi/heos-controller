@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=HEOS Controller
+Comment=Control your HEOS devices
+Exec=@bindir@/heos-controller
+Icon=com.github.heoscontroller
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;Player;GTK;
+StartupNotify=true
+Keywords=HEOS;Audio;Music;Streaming;

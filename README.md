@@ -1,64 +1,73 @@
 # HEOS Controller
 
-A Python application to control DENON HEOS devices on your local network. This application allows you to control HEOS-enabled devices, manage playback, adjust volume, and view now playing information.
+A GTK4 application for discovering and controlling HEOS audio devices on your network.
 
 ## Features
 
-- Control HEOS devices on your network
-- List all available HEOS players
-- Basic playback controls (play/pause)
-- Volume control
-- View now playing information
+- Automatic HEOS device discovery using mDNS
+- Clean and modern GTK4 interface with Libadwaita
+- Device control capabilities (login, playback, volume)
+- Cross-platform compatibility
 
 ## Requirements
 
-- Python 3.7 or higher
-- HEOS-enabled device(s) on the same network
-- IP address of your HEOS device
+- Python 3.8 or higher
+- GTK 4.0
+- Libadwaita 1.0
+- Python packages (see requirements.txt)
 
 ## Installation
 
-1. Create a virtual environment (recommended):
+1. Install system dependencies:
+
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Linux/Mac
+# Ubuntu/Debian
+sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-4.0 libadwaita-1
+
+# Fedora
+sudo dnf install python3-gobject gtk4 libadwaita
+
+# Arch Linux
+sudo pacman -S python-gobject gtk4 libadwaita
 ```
 
-2. Install the required packages:
+2. Create and activate a virtual environment:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+3. Install Python dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ## Usage
 
-1. Make sure your HEOS device is powered on and connected to the same network as your computer.
+1. Run the application:
 
-2. Find your HEOS device's IP address. You can usually find this in:
-   - Your router's admin interface
-   - The HEOS app's device settings
-   - Network scanner tools
-
-3. Run the application:
 ```bash
-python heos_controller.py
+python heos_controller_gtk.py
 ```
 
-4. When prompted, enter your HEOS device's IP address.
+2. The application will automatically discover HEOS devices on your network
+3. Select a device to control it
+4. Log in with your HEOS account to access additional features
 
-5. Use the interactive menu to control your HEOS devices:
-   - List all available players
-   - Control playback (play/pause)
-   - Adjust volume
-   - View now playing information
+## Testing
 
-## Troubleshooting
+Run the test suite:
 
-If the application fails to connect to your HEOS device:
-1. Ensure the device is powered on and connected to the network
-2. Verify the IP address is correct
-3. Check that your computer and the HEOS device are on the same network
-4. Make sure no firewall is blocking the connection
+```bash
+python -m pytest test_devices.py
+```
 
 ## License
 
-This project is open source and available under the MIT License.
+GPL-3.0
+
+## References
+
+- [HEOS CLI Protocol Specification](HEOS_CLI_ProtocolSpecification.pdf)

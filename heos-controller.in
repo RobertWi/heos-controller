@@ -1,0 +1,3 @@
+#!/bin/sh
+export PYTHONPATH="@prefix@/lib/python@PYTHON_VERSION@/site-packages:$PYTHONPATH"
+exec @PYTHON@ -m heos_controller_gtk "$@"

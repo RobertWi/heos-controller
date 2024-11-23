@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="libadwaita" version="1.0"/>
+  
+  <object class="AdwAboutWindow" id="about_window">
+    <property name="application-name">HEOS Controller</property>
+    <property name="application-icon">audio-speakers-symbolic</property>
+    <property name="developer-name">Robert</property>
+    <property name="version">1.0</property>
+    <property name="copyright"> 2024</property>
+    <property name="website">https://github.com/yourusername/heos-controller</property>
+    <property name="issue-url">https://github.com/yourusername/heos-controller/issues</property>
+    <property name="license-type">gpl-3-0</property>
+    <property name="comments">HEOS, DENON and Marantz are trademarks of D&amp;M Holdings Inc. The developers of this module are in no way endorsed by or affiliated with D&amp;M Holdings Inc., or any associated subsidiaries, logos or trademarks.</property>
+  </object>
+  
+  <menu id="primary_menu">
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">_Preferences</attribute>
+        <attribute name="action">app.preferences</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="yes">_About HEOS Controller</attribute>
+        <attribute name="action">app.about</attribute>
+      </item>
+    </section>
+  </menu>
+
+  <object class="AdwApplicationWindow" id="window">
+    <property name="default-width">600</property>
+    <property name="default-height">400</property>
+    <property name="title">HEOS Controller</property>
+    <child>
+      <object class="AdwToastOverlay" id="toast_overlay">
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="AdwHeaderBar">
+                <property name="centering-policy">strict</property>
+                <child type="end">
+                  <object class="GtkMenuButton">
+                    <property name="icon-name">open-menu-symbolic</property>
+                    <property name="menu-model">primary_menu</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkStack" id="stack">
+                <property name="transition-type">crossfade</property>
+                
+                <!-- Login View -->
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">login-view</property>
+                    <property name="child">
+                      <object class="GtkBox">
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">12</property>
+                        <property name="margin-start">24</property>
+                        <property name="margin-end">24</property>
+                        <property name="margin-top">24</property>
+                        <property name="margin-bottom">24</property>
+                        <property name="halign">center</property>
+                        <property name="valign">center</property>
+                        
+                        <!-- Login Section -->
+                        <child>
+                          <object class="GtkBox">
+                            <property name="orientation">vertical</property>
+                            <property name="spacing">12</property>
+                            <property name="halign">center</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="label">HEOS Account Login</property>
+                                <style>
+                                  <class name="title-1"/>
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkEntry" id="username_entry">
+                                <property name="placeholder-text">Username</property>
+                                <property name="width-request">250</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkPasswordEntry" id="password_entry">
+                                <property name="placeholder-text">Password</property>
+                                <property name="show-peek-icon">True</property>
+                                <property name="width-request">250</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="orientation">horizontal</property>
+                                <property name="spacing">12</property>
+                                <property name="halign">center</property>
+                                <child>
+                                  <object class="GtkSpinner" id="spinner">
+                                    <property name="visible">True</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="login_button">
+                                    <property name="label">Sign In</property>
+                                    <style>
+                                      <class name="suggested-action"/>
+                                      <class name="pill"/>
+                                    </style>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        
+                        <!-- Device List -->
+                        <child>
+                          <object class="GtkFrame">
+                            <property name="margin-top">24</property>
+                            <child>
+                              <object class="GtkListBox" id="devices_list">
+                                <property name="selection-mode">none</property>
+                                <style>
+                                  <class name="boxed-list"/>
+                                </style>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+
+                <!-- Main View -->
+                <child>
+                  <object class="AdwLeaflet">
+                    <property name="name">main-view</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">vertical</property>
+                        <property name="width-request">250</property>
+                        <child>
+                          <object class="AdwHeaderBar">
+                            <property name="centering-policy">strict</property>
+                            <child type="end">
+                              <object class="GtkMenuButton">
+                                <property name="icon-name">open-menu-symbolic</property>
+                                <property name="menu-model">primary_menu</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkScrolledWindow">
+                            <property name="hscrollbar-policy">never</property>
+                            <child>
+                              <object class="GtkListBox">
+                                <style>
+                                  <class name="navigation-sidebar"/>
+                                </style>
+                                <child>
+                                  <object class="AdwActionRow">
+                                    <property name="title">Now Playing</property>
+                                    <property name="icon-name">audio-x-generic-symbolic</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="AdwActionRow">
+                                    <property name="title">Playlists</property>
+                                    <property name="icon-name">view-list-symbolic</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="AdwActionRow">
+                                    <property name="title">Sources</property>
+                                    <property name="icon-name">folder-music-symbolic</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwToolbarView">
+                        <child type="top">
+                          <object class="AdwHeaderBar"/>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkListBox" id="device_controls">
+                                <style>
+                                  <class name="content"/>
+                                </style>
+                                <!-- Device Info -->
+                                <child>
+                                  <object class="AdwActionRow" id="device_info_row">
+                                    <property name="title">Device Information</property>
+                                    <property name="subtitle">No device selected</property>
+                                  </object>
+                                </child>
+                                <!-- Now Playing -->
+                                <child>
+                                  <object class="AdwActionRow" id="now_playing_row">
+                                    <property name="title">Now Playing</property>
+                                    <property name="subtitle">Nothing playing</property>
+                                  </object>
+                                </child>
+                                <!-- Playback Controls -->
+                                <child>
+                                  <object class="GtkBox">
+                                    <property name="orientation">horizontal</property>
+                                    <property name="spacing">6</property>
+                                    <property name="margin-top">12</property>
+                                    <property name="margin-bottom">12</property>
+                                    <property name="margin-start">12</property>
+                                    <property name="margin-end">12</property>
+                                    <property name="halign">center</property>
+                                    <child>
+                                      <object class="GtkButton" id="prev_button">
+                                        <property name="icon-name">media-skip-backward-symbolic</property>
+                                        <style>
+                                          <class name="circular"/>
+                                        </style>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="play_pause_button">
+                                        <property name="icon-name">media-playback-start-symbolic</property>
+                                        <style>
+                                          <class name="circular"/>
+                                          <class name="suggested-action"/>
+                                        </style>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="next_button">
+                                        <property name="icon-name">media-skip-forward-symbolic</property>
+                                        <style>
+                                          <class name="circular"/>
+                                        </style>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <!-- Volume Control -->
+                                <child>
+                                  <object class="GtkBox">
+                                    <property name="orientation">horizontal</property>
+                                    <property name="spacing">12</property>
+                                    <property name="margin-top">6</property>
+                                    <property name="margin-bottom">12</property>
+                                    <property name="margin-start">12</property>
+                                    <property name="margin-end">12</property>
+                                    <child>
+                                      <object class="GtkButton" id="mute_button">
+                                        <property name="icon-name">audio-volume-high-symbolic</property>
+                                        <style>
+                                          <class name="circular"/>
+                                        </style>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkScale" id="volume_scale">
+                                        <property name="orientation">horizontal</property>
+                                        <property name="draw-value">True</property>
+                                        <property name="value-pos">right</property>
+                                        <property name="adjustment">
+                                          <object class="GtkAdjustment">
+                                            <property name="lower">0</property>
+                                            <property name="upper">100</property>
+                                            <property name="value">50</property>
+                                            <property name="step-increment">1</property>
+                                            <property name="page-increment">10</property>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <!-- Source Selection -->
+                                <child>
+                                  <object class="AdwComboRow" id="source_combo">
+                                    <property name="title">Source</property>
+                                    <property name="model">
+                                      <object class="GtkStringList">
+                                        <items>
+                                          <item>Line-In</item>
+                                          <item>Bluetooth</item>
+                                          <item>TuneIn</item>
+                                          <item>Spotify</item>
+                                          <item>Amazon Music</item>
+                                        </items>
+                                      </object>
+                                    </property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

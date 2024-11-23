@@ -22,13 +22,14 @@ kill_port() {
 
 # Function to check if server is responding
 check_server() {
+    local port=$1
     local max_attempts=10
     local attempt=1
     
-    echo -e "${YELLOW}Waiting for server to start...${NC}"
+    echo -e "${YELLOW}Waiting for server on port $port to start...${NC}"
     while [ $attempt -le $max_attempts ]; do
-        if curl -s http://localhost:8080/health > /dev/null; then
-            echo -e "${GREEN}Server started successfully${NC}"
+        if curl -s http://localhost:$port/health > /dev/null; then
+            echo -e "${GREEN}Server on port $port started successfully${NC}"
             return 0
         fi
         echo -n "."
@@ -36,7 +37,7 @@ check_server() {
         attempt=$((attempt + 1))
     done
     
-    echo -e "\n${RED}Failed to start server after $max_attempts attempts${NC}"
+    echo -e "\n${RED}Failed to start server on port $port after $max_attempts attempts${NC}"
     return 1
 }
 
@@ -44,14 +45,22 @@ check_server() {
 cleanup() {
     echo -e "\n${YELLOW}Cleaning up...${NC}"
     
-    # Kill server process if running
-    if [ ! -z "$SERVER_PID" ]; then
-        echo -e "${YELLOW}Stopping HEOS Controller server...${NC}"
-        kill $SERVER_PID 2>/dev/null || true
+    # Kill server processes if running
+    if [ ! -z "$AIOHTTP_PID" ]; then
+        echo -e "${YELLOW}Stopping HEOS Controller aiohttp server...${NC}"
+        kill $AIOHTTP_PID 2>/dev/null || true
+    fi
+    
+    if [ ! -z "$WEBAPP_PID" ]; then
+        echo -e "${YELLOW}Stopping HEOS Controller web app...${NC}"
+        kill $WEBAPP_PID 2>/dev/null || true
     fi
     
     # Kill any process on port 8080
     kill_port 8080
+    
+    # Kill any process on port 8000
+    kill_port 8000
     
     # Deactivate virtual environment if active
     if [ -n "$VIRTUAL_ENV" ]; then
@@ -77,23 +86,35 @@ else
     source venv/bin/activate
 fi
 
-# Kill any existing process on port 8080
-echo -e "${YELLOW}Ensuring port 8080 is free...${NC}"
+# Kill any existing processes
+echo -e "${YELLOW}Ensuring ports are free...${NC}"
 kill_port 8080
-sleep 2  # Give more time for port to be freed
+kill_port 8000
+sleep 2  # Give more time for ports to be freed
 
 # Start aiohttp server
-echo -e "${GREEN}Starting HEOS Controller server...${NC}"
+echo -e "${GREEN}Starting HEOS Controller aiohttp server...${NC}"
 python3 aiohttp_server.py &
-SERVER_PID=$!
+AIOHTTP_PID=$!
 
-# Wait for server to start
-if ! check_server; then
-    echo -e "${RED}Failed to start HEOS Controller server${NC}"
+# Start web app server
+echo -e "${GREEN}Starting HEOS Controller web app...${NC}"
+python3 web_app.py &
+WEBAPP_PID=$!
+
+# Wait for servers to start
+if ! check_server 8080; then
+    echo -e "${RED}Failed to start HEOS Controller aiohttp server${NC}"
     exit 1
 fi
 
-echo -e "${GREEN}HEOS Controller server is running${NC}"
+if ! check_server 8000; then
+    echo -e "${RED}Failed to start HEOS Controller web app${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}All HEOS Controller servers are running${NC}"
+echo -e "${GREEN}Access the web interface at: http://localhost:8000${NC}"
 
 # Keep the script running
-wait $SERVER_PID
+wait $AIOHTTP_PID $WEBAPP_PID
